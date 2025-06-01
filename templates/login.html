@@ -1,8 +1,51 @@
 {% extends 'layout.html' %}
 {% block content %}
-<form method="POST">
-    <label>Username:</label><input type="text" name="username"><br>
-    <label>Password:</label><input type="password" name="password"><br>
+
+<form method="POST" id="loginForm">
+    <label>Select Username:</label><br>
+    <div class="username-buttons">
+        {% for name in usernames %}
+            <button type="button" class="username-btn" data-username="{{ name }}">{{ name }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Hidden input to hold selected username -->
+    <input type="hidden" name="username" id="usernameInput">
+
+    <br><label>Passkey:</label>
+    <input type="password" name="passkey" required><br><br>
+
     <input type="submit" value="Login">
 </form>
+
+<script>
+    const buttons = document.querySelectorAll('.username-btn');
+    const usernameInput = document.getElementById('usernameInput');
+
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            usernameInput.value = button.dataset.username;
+        });
+    });
+</script>
+
+<style>
+    .username-btn {
+        margin: 5px;
+        padding: 8px 12px;
+        background-color: #eee;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .username-btn.selected {
+        background-color: #4caf50;
+        color: white;
+        border-color: #388e3c;
+    }
+</style>
+
 {% endblock %}

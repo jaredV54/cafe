@@ -2,9 +2,22 @@
 <html>
 <head>
     <title>Cafe POS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
 </head>
 <body>
-    <h1>Cafe Point of Sale</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div>
+            {% for category, message in messages %}
+                <div class="flash-message {% if category == 'success' %}flash-success{% elif category == 'warning' %}flash-warning{% endif %}">
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <nav>nav area</nav>
     {% block content %}{% endblock %}
 </body>
 </html>
