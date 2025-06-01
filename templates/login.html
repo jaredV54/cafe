@@ -2,20 +2,19 @@
 {% block content %}
 
 <form method="POST" id="loginForm">
-    <label>Select Username:</label><br>
+    <label>Select User:</label><br>
     <div class="username-buttons">
         {% for name in usernames %}
             <button type="button" class="username-btn" data-username="{{ name }}">{{ name }}</button>
         {% endfor %}
     </div>
 
-    <!-- Hidden input to hold selected username -->
-    <input type="hidden" name="username" id="usernameInput">
+    <input type="hidden" name="username" id="usernameInput" value="{{ selected_username|default('') }}">
 
     <br><label>Passkey:</label>
-    <input type="password" name="passkey" required><br><br>
+    <input type="password" name="passkey" maxlength="6" required><br><br>
 
-    <input type="submit" value="Login">
+    <input type="submit" value="Confirm">
 </form>
 
 <script>
@@ -29,6 +28,15 @@
             usernameInput.value = button.dataset.username;
         });
     });
+
+    const selectedUsername = usernameInput.value;
+    if (selectedUsername) {
+        buttons.forEach(button => {
+            if (button.dataset.username === selectedUsername) {
+                button.classList.add('selected');
+            }
+        });
+    }
 </script>
 
 <style>

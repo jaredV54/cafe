@@ -17,7 +17,23 @@
         {% endif %}
     {% endwith %}
 
-    <nav>nav area</nav>
+    <nav>
+    {% if session.user %}
+        <ul class="nav-list">
+        <li><a href="{{ url_for('purchase') }}">Purchase</a></li>
+        <li><a href="{{ url_for('transactions') }}">Transactions</a></li>
+
+        {% if session.role == 'admin' %}
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('sales') }}">Sales</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+        {% endif %}
+
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    {% endif %}
+    </nav>
+
     {% block content %}{% endblock %}
 </body>
 </html>

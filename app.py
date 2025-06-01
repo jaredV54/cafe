@@ -19,30 +19,42 @@ def setup():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if "user" in session:
-        return redirect(url_for("home"))
-    
+        return redirect(url_for("purchase"))
+
+    with sqlite3.connect(DB) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT username FROM users")
+        usernames = [row[0] for row in cur.fetchall()]
+
+    selected_username = ""
+
     if request.method == "POST":
-        username = request.form["username"]
-        passkey = request.form["passkey"]
+        selected_username = request.form.get("username", "").strip()
+        passkey = request.form.get("passkey", "").strip()
+
+        if not selected_username:
+            flash("You must select a user.", "warning")
+            return render_template("login.html", usernames=usernames, selected_username=selected_username)
+
+        if len(passkey) != 6 or not passkey.isdigit():
+            flash("Passkey must be exactly 6 digits.", "warning")
+            return render_template("login.html", usernames=usernames, selected_username=selected_username)
+
         with sqlite3.connect(DB) as conn:
             cur = conn.cursor()
-            cur.execute("SELECT id, role FROM users WHERE username=? AND passkey=?", (username, passkey))
+            cur.execute("SELECT id, role FROM users WHERE username=? AND passkey=?", (selected_username, passkey))
             user = cur.fetchone()
+
             if user:
-                session["user"] = username
+                session["user"] = selected_username
                 session["role"] = user[1]
                 session["user_id"] = user[0]
-                return redirect(url_for("home"))
+                return redirect(url_for("purchase"))
             else:
-                flash("Invalid credentials", "danger")
-    else:
-        with sqlite3.connect(DB) as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT username FROM users")
-            usernames = [row[0] for row in cur.fetchall()]
-        return render_template("login.html", usernames=usernames)
-    
-    return render_template("login.html", usernames=[])  
+                flash("Invalid credentials", "warning")
+                return render_template("login.html", usernames=usernames, selected_username=selected_username)
+
+    return render_template("login.html", usernames=usernames, selected_username=selected_username)
 
 # ---------------------------------------------------------------------------------------------
 # LOGOUT 
@@ -59,9 +71,11 @@ def logout():
 # Read
 
 @app.route("/")
+@app.route("/home")
+@app.route("/purchase")
 @login_required
-def home():
-    return render_template("home.html")
+def purchase():
+    return render_template("purchase.html")
 
 # ---------------------------------------------------------------------------------------------
 # TRANSACTION RECORDS 
@@ -89,7 +103,10 @@ def inventory():
 
 @app.route("/sales")
 @login_required
-def inventory():
+def sales():
+    if not is_admin():
+        return redirect(url_for("purchase"))
+    
     return render_template("sales.html")
 
 # ---------------------------------------------------------------------------------------------
@@ -103,7 +120,7 @@ def inventory():
 @login_required
 def users():
     if not is_admin():
-        return redirect(url_for("home"))
+        return redirect(url_for("purchase"))
 
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
@@ -115,7 +132,7 @@ def users():
 @login_required
 def add_user():
     if not is_admin():
-        return redirect(url_for("home"))
+        return redirect(url_for("purchase"))
     
     username = request.form["username"]
     passkey = request.form["passkey"]
@@ -142,7 +159,7 @@ def add_user():
 @login_required
 def edit_user(user_id):
     if not is_admin():
-        return redirect(url_for("home"))
+        return redirect(url_for("purchase"))
     
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
@@ -189,7 +206,7 @@ def edit_user(user_id):
 @login_required
 def delete_user(user_id):
     if not is_admin():
-        return redirect(url_for("home"))
+        return redirect(url_for("purchase"))
     
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
