@@ -1,7 +1,37 @@
+:root {
+  --dark: #28282B;
+  --light: #fff;
+
+  --brown-light: #a67b5b;
+  --brown-ver1: #4b3621;
+  --brown-ver2: #6f4e37;
+  --brown-ver3: #382206;
+
+  --fs-xxxl: 2.6rem; 
+  --fs-xxl: 2.2rem; 
+  --fs-xl: 1.75rem; 
+  --fs-l: 1.6rem;
+  --fs-m: 1.4rem;
+  --fs-s: 1.14rem;  
+  --fs-xs: .975rem;  
+  --fs-xxs: 0.875rem;
+  --fs-xxxs: 0.75rem;
+
+  --primary-font: 'Poppins', sans-serif;
+  --trans-duration-default: .27s;
+
+  /* Box shadows acting as thin borders */
+  --shadow-default: rgba(0, 0, 0, 0.068) 0px 2px 3px 0px, rgba(0, 0, 0, 0.408) 0px 0px 0px .06rem;
+  --shadow-hover: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0, 0, 0, 0.312);
+  --shadow-material: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-family: var(--primary-font);
+  color: var(--brown-ver1);
 }
 
 a {
@@ -9,11 +39,7 @@ a {
     color: inherit;
 }
 
-.editing-user {
-  background-color: #ffeeb5;  
-  font-weight: bold;
-}
-
+/* Temporary */
 @keyframes fadeInOut {
   0% {
     opacity: 0;

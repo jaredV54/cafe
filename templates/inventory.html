@@ -1,6 +1,151 @@
 {% extends 'layout.html' %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventory.css') }}">
 
-<h2>Inventory Management</h2>
+<section>
+    <h2>Inventory Management</h2>
+    <div class="manage-inventory">
+    <form id="product-form" action="{{ url_for('add_product') }}" method="post">
+        <h3 id="form-title">Add New Product</h3>
+        
+        <input type="hidden" name="product_id" id="product-id">
+
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="product-name" required>
+        </div>
+        
+        <div>
+            <label for="price">Price:</label>
+            <input type="number" step="0.01" name="price" id="product-price" required>
+        </div>
+        
+        <div>
+            <label for="category">Category:</label>
+            <select name="category" id="product-category" required>
+                <option value="hot-coffee">Hot Coffee</option>
+                <option value="cold-coffee">Cold Coffee</option>
+                <option value="pastries">Pastries</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="is_available">Available:</label>
+            <input type="checkbox" name="is_available" id="product-available">
+        </div>
+
+        <div>
+            <button type="button" id="cancel-button" style="display:none;">Cancel</button>
+            <button type="submit" id="submit-button">Add Product</button>
+        </div>
+    </form>
+</div>
+
+    <div>
+        <div>
+            <input type="text" name="search-bar" id="search-query" placeholder="Search for an item...">
+            <button id="search-button">Search</button>
+        </div>
+
+        <div class="inventory">
+            <div id="category-container">
+                <ul class="categories">
+                    <li class="{% if selected_category == 'hot-coffee' %}active{% endif %}">
+                        <a href="?category=hot-coffee">Hot Coffee</a>
+                    </li>
+                    <li class="{% if selected_category == 'cold-coffee' %}active{% endif %}">
+                        <a href="?category=cold-coffee">Cold Coffee</a>
+                    </li>
+                    <li class="{% if selected_category == 'pastries' %}active{% endif %}">
+                        <a href="?category=pastries">Pastries</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <ul>
+                {% for product in products %}
+                    {% if product['name'] %}
+                    <li 
+                        class="product-item"
+                        data-id="{{ product['id'] }}"
+                        data-name="{{ product['name']|replace("'", "\\'")|replace('\\', '\\\\') }}"
+                        data-price="{{ product['price'] }}"
+                        data-category="{{ product['category']|replace("'", "\\'")|replace('\\', '\\\\') }}"
+                        data-available="{{ 'true' if product['is_available'] else 'false' }}"
+                        onclick="selectProduct(this)"
+                    >
+                        <h4>{{ product['name'] }}</h4>
+                        <p>{{ product['price'] }}</p>
+                        <p>{{ "Available" if product['is_available'] else "Unavailable" }}</p>
+                        <form action="{{ url_for('delete_product', product_id=product['id']) }}" method="post" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Are you sure you want to delete this product?');">Delete</button>
+                        </form>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>
+
+<script>
+    function selectProduct(element) {
+        const isActive = element.classList.contains('active_product');
+
+        const previouslyActive = document.querySelector('.product-item.active_product');
+        if (previouslyActive) {
+            previouslyActive.classList.remove('active_product');
+        }
+
+        if (!isActive) {
+            element.classList.add('active_product');
+
+            const id = element.getAttribute('data-id');
+            const name = element.getAttribute('data-name');
+            const price = element.getAttribute('data-price');
+            const category = element.getAttribute('data-category');
+            const isAvailable = element.getAttribute('data-available') === 'true';
+
+            console.log('Product ID:', id);
+            console.log('Product Name:', name);
+            console.log('Product Price:', price);
+            console.log('Product Category:', category);
+            console.log('Product Available:', isAvailable);
+
+            document.getElementById('product-id').value = id;
+            document.getElementById('product-name').value = name;
+            document.getElementById('product-price').value = price;
+            document.getElementById('product-category').value = category;
+            document.getElementById('product-available').checked = isAvailable;
+            
+            document.getElementById('form-title').innerText = 'Update Product';
+            document.getElementById('submit-button').innerText = 'Update';
+            
+            const editUrl = "{{ url_for('edit_product', product_id='0') }}".replace('/0', '/' + id);
+            document.getElementById('product-form').action = editUrl;
+            
+            document.getElementById('cancel-button').style.display = 'inline';
+        } else {
+            document.getElementById('product-form').reset();
+            document.getElementById('form-title').innerText = 'Add New Product';
+            document.getElementById('submit-button').innerText = 'Add Product';
+            document.getElementById('product-form').action = "{{ url_for('add_product') }}";
+            document.getElementById('cancel-button').style.display = 'none';
+        }
+    }
+
+    document.getElementById('cancel-button').onclick = function() {
+        document.getElementById('product-form').reset();
+        document.getElementById('form-title').innerText = 'Add New Product';
+        document.getElementById('submit-button').innerText = 'Add Product';
+        document.getElementById('product-form').action = "{{ url_for('add_product') }}";
+        this.style.display = 'none';
+
+        const previouslyActive = document.querySelector('.product-item.active_product');
+        if (previouslyActive) {
+            previouslyActive.classList.remove('active_product');
+        }
+    };
+</script>
 
 {% endblock %}

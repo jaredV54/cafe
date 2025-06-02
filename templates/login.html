@@ -1,20 +1,24 @@
 {% extends 'layout.html' %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 
-<form method="POST" id="loginForm">
-    <label>Select User:</label><br>
-    <div class="username-buttons">
-        {% for name in usernames %}
-            <button type="button" class="username-btn" data-username="{{ name }}">{{ name }}</button>
-        {% endfor %}
+<form method="POST" id="login-form">
+    <div>
+        <label>Select User</label>
+        <div class="username-buttons">
+            {% for name in usernames %}
+                <button type="button" class="username-btn" data-username="{{ name }}">{{ name }}</button>
+            {% endfor %}
+        </div>
     </div>
 
     <input type="hidden" name="username" id="usernameInput" value="{{ selected_username|default('') }}">
 
-    <br><label>Passkey:</label>
-    <input type="password" name="passkey" maxlength="6" required><br><br>
-
-    <input type="submit" value="Confirm">
+    <div class="passkey-input-container">
+        <label>Passkey</label>
+        <input type="password" name="passkey" maxlength="6" placeholder="------" required>
+        <input type="submit" value="Confirm">
+    </div>
 </form>
 
 <script>
@@ -38,22 +42,4 @@
         });
     }
 </script>
-
-<style>
-    .username-btn {
-        margin: 5px;
-        padding: 8px 12px;
-        background-color: #eee;
-        border: 1px solid #ccc;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-
-    .username-btn.selected {
-        background-color: #4caf50;
-        color: white;
-        border-color: #388e3c;
-    }
-</style>
-
 {% endblock %}

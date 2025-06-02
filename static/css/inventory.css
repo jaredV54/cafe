@@ -1,0 +1,16 @@
+.categories .active a {
+    font-weight: bold;
+    color: #007bff;
+    text-decoration: underline;
+}
+
+li.product-item {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+}
+
+.active_product {
+    background-color: #007bff;
+}

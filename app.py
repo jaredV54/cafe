@@ -1,7 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, session, request, flash
 from auth import login_required, is_admin, init_db
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
-import re 
+import re
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -42,12 +43,12 @@ def login():
 
         with sqlite3.connect(DB) as conn:
             cur = conn.cursor()
-            cur.execute("SELECT id, role FROM users WHERE username=? AND passkey=?", (selected_username, passkey))
+            cur.execute("SELECT id, passkey, role FROM users WHERE username=?", (selected_username,))
             user = cur.fetchone()
 
-            if user:
+            if user and check_password_hash(user[1], passkey):
                 session["user"] = selected_username
-                session["role"] = user[1]
+                session["role"] = user[2]
                 session["user_id"] = user[0]
                 return redirect(url_for("purchase"))
             else:
@@ -95,7 +96,103 @@ def transactions():
 @app.route("/inventory")
 @login_required
 def inventory():
-    return render_template("inventory.html")
+    category = request.args.get('category', 'hot-coffee')
+    try:
+        with sqlite3.connect(DB) as conn:
+            conn.row_factory = sqlite3.Row  
+            cur = conn.cursor()
+            cur.execute("SELECT id, name, price, is_available, category FROM products WHERE category = ?", (category,))
+            products = cur.fetchall()
+    except sqlite3.Error as e:
+        flash(f"An error occurred while fetching products: {e}", "danger")
+        products = []
+    return render_template("inventory.html", products=products, selected_category=category)
+
+@app.route("/inventory/add", methods=["GET", "POST"])
+@login_required
+def add_product():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        price = request.form.get("price", "").strip()
+        category = request.form.get("category", "").strip()
+        is_available = request.form.get("is_available", "off") == "on"
+
+        if not name or not price or not category:
+            flash("All fields are required", "warning")
+            return redirect(url_for("add_product"))
+
+        try:
+            price = float(price)
+            if price <= 0:
+                raise ValueError("Price must be greater than zero")
+        except ValueError as e:
+            flash(f"Price must be a valid positive number: {e}", "warning")
+            return redirect(url_for("add_product"))
+
+        try:
+            with sqlite3.connect(DB) as conn:
+                cur = conn.cursor()
+                cur.execute("INSERT INTO products (name, price, is_available, category) VALUES (?, ?, ?, ?)",
+                            (name, price, is_available, category))
+                conn.commit()
+            flash("Product added successfully", "success")
+        except sqlite3.Error as e:
+            flash(f"An error occurred while adding the product: {e}", "danger")
+            return redirect(url_for("add_product"))
+
+        return redirect(url_for("inventory"))
+
+    return render_template("add_product.html")
+
+@app.route("/inventory/edit/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def edit_product(product_id):
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        price = request.form.get("price", "").strip()
+        category = request.form.get("category", "").strip()
+        is_available = request.form.get("is_available") == "on"
+
+        if not name or not price or not category:
+            flash("All fields are required", "warning")
+            return redirect(url_for("inventory"))
+
+        try:
+            price = float(price)
+            if price <= 0:
+                raise ValueError("Price must be greater than zero")
+        except ValueError as e:
+            flash(f"Price must be a valid positive number: {e}", "warning")
+            return redirect(url_for("inventory"))
+
+        try:
+            with sqlite3.connect(DB) as conn:
+                cur = conn.cursor()
+                cur.execute("""
+                    UPDATE products 
+                    SET name=?, price=?, is_available=?, category=? 
+                    WHERE id=?""",
+                    (name, price, is_available, category, product_id))
+                conn.commit()
+            flash("Product updated successfully", "success")
+        except sqlite3.Error as e:
+            flash(f"An error occurred while updating the product: {e}", "danger")
+            return redirect(url_for("inventory"))
+
+    return redirect(url_for("inventory"))
+
+@app.route("/inventory/delete/<int:product_id>", methods=["POST"])
+@login_required
+def delete_product(product_id):
+    try:
+        with sqlite3.connect(DB) as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM products WHERE id=?", (product_id,))
+            conn.commit()
+        flash("Product deleted successfully", "success")
+    except sqlite3.Error as e:
+        flash(f"An error occurred while deleting the product: {e}", "danger")
+    return redirect(url_for("inventory"))
 
 # ---------------------------------------------------------------------------------------------
 # SALES RECORD 
@@ -146,10 +243,12 @@ def add_user():
         flash("Passkey must be exactly 6 digits", "warning")
         return redirect(url_for("users"))
 
+    hashed_passkey = generate_password_hash(passkey)
+
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
         cur.execute("INSERT INTO users (username, passkey, role) VALUES (?, ?, ?)",
-                    (username, passkey, role))
+                    (username, hashed_passkey, role))
         conn.commit()
 
     flash("User added successfully", "success")
@@ -176,8 +275,9 @@ def edit_user(user_id):
                 if not re.fullmatch(r"\d{6}", passkey):
                     flash("Passkey must be exactly 6 digits", "warning")
                     return redirect(url_for("edit_user", user_id=user_id))
+                hashed_passkey = generate_password_hash(passkey)
                 cur.execute("UPDATE users SET username=?, passkey=?, role=? WHERE id=?",
-                            (username, passkey, role, user_id))
+                            (username, hashed_passkey, role, user_id))
             else:
                 cur.execute("UPDATE users SET username=?, role=? WHERE id=?",
                             (username, role, user_id))

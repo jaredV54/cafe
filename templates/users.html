@@ -1,6 +1,8 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/users.css') }}">
+
 <h1>User Management</h1>
 
 <h2>{{ 'Edit' if edit_user else 'Add New' }} User</h2>
@@ -33,7 +35,6 @@
 <table border="1" cellpadding="5" cellspacing="0">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Username</th>
             <th>Role</th>
             <th>Actions</th>
@@ -42,7 +43,6 @@
     <tbody>
         {% for u in users %}
         <tr class="{% if user and u[0] == user.id %}editing-user{% endif %}">
-            <td>{{ u[0] }}</td>
             <td>{{ u[1] }}</td>
             <td>{{ u[2] }}</td>
             <td>
