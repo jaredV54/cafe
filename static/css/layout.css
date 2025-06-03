@@ -7,11 +7,11 @@
   --brown-ver2: #6f4e37;
   --brown-ver3: #382206;
 
-  --fs-xxxl: 2.6rem; 
-  --fs-xxl: 2.2rem; 
-  --fs-xl: 1.75rem; 
-  --fs-l: 1.6rem;
-  --fs-m: 1.4rem;
+  --fs-xxxl: 2.2rem; 
+  --fs-xxl: 2rem; 
+  --fs-xl: 1.6rem; 
+  --fs-l: 1.4rem;
+  --fs-m: 1.2rem;
   --fs-s: 1.14rem;  
   --fs-xs: .975rem;  
   --fs-xxs: 0.875rem;
@@ -34,28 +34,53 @@
   color: var(--brown-ver1);
 }
 
-a {
-    text-decoration: none;
-    color: inherit;
+#page-container {
+  margin-left: 140px;
+  padding: 20px;
 }
 
-/* Temporary */
+/* Default Style */
+h1, h2, h3 {
+  font-weight: 600;
+  color: var(--brown-ver1);
+}
+
+h1 {
+  font-size: var(--fs-xxl);
+}
+
+h2 {
+  font-size: var(--fs-xl);
+}
+
+h3 {
+  font-size: var(--fs-l);
+}
+
+h4 {
+  font-size: var(--fs-m);
+}
+
+a {
+    text-decoration: none;
+}
+
 @keyframes fadeInOut {
   0% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translate(-50%, -10px);
   }
   10% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
   }
   90% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
   }
   100% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translate(-50%, -10px);
   }
 }
 
@@ -63,18 +88,78 @@ a {
   animation: fadeInOut 4s ease-in-out forwards;
   padding: 5px 10px;
   border-radius: 4px;
-  color: #fff;
+  color: var(--light);
   width: fit-content;
   position: fixed;
   left: 50%;
   top: 10px;
-  transform: translateX(-50%);
+  transform: translate(-50%, 0);
 }
 
 .flash-message.flash-success {
-  background-color: #4CAF50;
+  background-color: var(--brown-light);
+  color: var(--light);
 }
 
 .flash-message.flash-warning {
-  background-color: #f39c12;
+  background-color: var(--brown-ver3);
+  color: var(--light);
 }
+
+.nav_active {
+  color: var(--brown-ver3);
+}
+
+/* < Navigation */
+
+nav {
+  position: fixed;
+  height: 100dvh;
+  z-index: 9999;
+}
+
+nav > ul {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 30px 15px;
+  gap: 20px;
+  font-weight: 500;
+}
+
+nav a {
+  color: var(--brown-light);
+}
+
+.logout {
+  position: absolute;
+  bottom: 30px;
+}
+
+/* > */
+
+ul > li {
+  list-style: none;
+}
+
+/* < Displayed Products */
+.categories a {
+  color: var(--brown-light);
+  font-weight: 500;
+}
+
+.categories .active a {
+  color: var(--brown-ver3);
+}
+
+li.product-item {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+}
+
+.active_product {
+    background-color: #007bff;
+}
+/* > */

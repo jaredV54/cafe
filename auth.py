@@ -24,7 +24,8 @@ def init_db(db_path):
                 username TEXT UNIQUE NOT NULL,
                 passkey TEXT NOT NULL,
                 role TEXT NOT NULL CHECK(role IN ('admin', 'staff')),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_deleted BOOLEAN DEFAULT 0
             );
         ''')
 
@@ -35,7 +36,8 @@ def init_db(db_path):
                 name TEXT NOT NULL,
                 price DECIMAL(10, 2) NOT NULL,
                 is_available BOOLEAN DEFAULT 1,
-                category TEXT NOT NULL
+                category TEXT NOT NULL,
+                is_deleted BOOLEAN DEFAULT 0
             );
         ''')
 
@@ -45,7 +47,10 @@ def init_db(db_path):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 transaction_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                cash DECIMAL(10, 2) NOT NULL,
+                change DECIMAL(10, 2) NOT NULL,
                 total_amount DECIMAL(10, 2) NOT NULL,
+                is_deleted BOOLEAN DEFAULT 0,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
         ''')
@@ -56,7 +61,7 @@ def init_db(db_path):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 transaction_id INTEGER NOT NULL,
                 product_id INTEGER NOT NULL,
-                product_name TEXT NOT NULL,
+                product_name VARCHAR(100) NOT NULL,
                 quantity INTEGER NOT NULL,
                 price_each DECIMAL(10, 2) NOT NULL,
                 subtotal DECIMAL(10, 2) NOT NULL,

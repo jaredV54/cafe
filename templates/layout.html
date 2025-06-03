@@ -19,22 +19,36 @@
     {% endwith %}
 
     <nav>
-    {% if session.user %}
-        <ul class="nav-list">
-        <li><a href="{{ url_for('purchase') }}">Purchase</a></li>
-        <li><a href="{{ url_for('transactions') }}">Transactions</a></li>
+        {% if session.user %}
+            <ul class="nav-list">
+                <li>
+                    <a class="{% if request.path == url_for('purchase') %}nav_active{% endif %}" href="{{ url_for('purchase') }}">Purchase</a>
+                </li>
+                <li>
+                    <a class="{% if request.path == url_for('transactions') %}nav_active{% endif %}" href="{{ url_for('transactions') }}">Transactions</a>
+                </li>
 
-        {% if session.role == 'admin' %}
-            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-            <li><a href="{{ url_for('sales') }}">Sales</a></li>
-            <li><a href="{{ url_for('users') }}">Users</a></li>
+                {% if session.role == 'admin' %}
+                    <li>
+                        <a class="{% if request.path == url_for('inventory') %}nav_active{% endif %}" href="{{ url_for('inventory') }}">Inventory</a>
+                    </li>
+                    <li>
+                        <a class="{% if request.path == url_for('sales') %}nav_active{% endif %}" href="{{ url_for('sales') }}">Sales</a>
+                    </li>
+                    <li>
+                        <a class="{% if request.path == url_for('users') %}nav_active{% endif %}" href="{{ url_for('users') }}">Users</a>
+                    </li>
+                {% endif %}
+
+                <li class="logout">
+                    <a class="{% if request.path == url_for('logout') %}nav_active{% endif %}" href="{{ url_for('logout') }}">Logout</a>
+                </li>
+            </ul>
         {% endif %}
-
-        <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    {% endif %}
     </nav>
 
-    {% block content %}{% endblock %}
+    <main id="page-container"> 
+        {% block content %}{% endblock %}
+    </main>
 </body>
 </html>
