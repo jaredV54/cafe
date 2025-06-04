@@ -1,5 +1,8 @@
 {% extends 'layout.html' %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/receipt.css') }}">
+
 <h2>Transaction Records</h2>
 <form method="GET" id="filter-form">
     <label>From:</label>
