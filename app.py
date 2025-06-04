@@ -6,6 +6,7 @@ import json
 import re
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
 load_dotenv()  
 
@@ -87,7 +88,6 @@ def getProducts():
 
 # ---------------------------------------------------------------------------------------------
 # LOGOUT 
-
 @app.route("/logout")
 def logout():
     session.clear()
@@ -98,7 +98,6 @@ def logout():
 # PURCHASE SECTION
 # Create
 # Read
-
 @app.route("/")
 @app.route("/home")
 @app.route("/purchase", methods=["GET", "POST"])
@@ -109,6 +108,7 @@ def purchase():
         cash = float(request.form.get("cash_amount"))
         change = float(request.form.get("change"))
         total_amount = float(request.form.get("total_amount"))
+        mode_of_payment = request.form.get("mode_of_payment", "cash")
         products = request.form.get("products")
 
         try:
@@ -116,9 +116,9 @@ def purchase():
             with sqlite3.connect(DB) as conn:
                 cur = conn.cursor()
                 cur.execute("""
-                    INSERT INTO transactions (user_id, cash, change, total_amount)
-                    VALUES (?, ?, ?, ?)
-                """, (user_id, cash, change, total_amount))
+                    INSERT INTO transactions (user_id, cash, change, total_amount, mode_of_payment)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (user_id, cash, change, total_amount, mode_of_payment))
                 transaction_id = cur.lastrowid
 
                 for product in products_list:
@@ -141,11 +141,105 @@ def purchase():
 # ---------------------------------------------------------------------------------------------
 # TRANSACTION RECORDS 
 # Read
-@app.route("/transactions")
+@app.route('/transactions')
 @login_required
 def transactions():
-    return render_template("transactions.html")
+    q = request.args.get('q')
+    startdate = request.args.get('startdate')
+    enddate = request.args.get('enddate')
+    receipt_id = request.args.get('receipt_id')  # New parameter for specific receipt
 
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    transaction = None
+    products = []
+
+    if receipt_id:
+        # Fetch specific transaction details
+        cursor.execute("""
+            SELECT transactions.id AS transaction_id, transactions.*, users.username, users.id AS user_id 
+            FROM transactions 
+            INNER JOIN users ON transactions.user_id = users.id
+            WHERE transactions.id = ? AND transactions.is_deleted != 1
+        """, (receipt_id,))
+        transaction = cursor.fetchone()
+
+        if transaction:
+            cursor.execute("""
+                SELECT product_name, quantity, price_each AS price, subtotal
+                FROM transaction_details
+                WHERE transaction_id = ?
+            """, (receipt_id,))
+            products = cursor.fetchall()
+
+    if startdate and enddate:
+        try:
+            start_dt = datetime.strptime(startdate, '%Y-%m-%dT%H:%M')
+            end_dt = datetime.strptime(enddate, '%Y-%m-%dT%H:%M')
+            if end_dt < start_dt:
+                flash("End date/time cannot be before start date/time.", "warning")
+                return redirect(url_for('transactions'))
+            start_datetime_str = start_dt.strftime('%Y-%m-%d %H:%M:%S')
+            end_datetime_str = end_dt.strftime('%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            flash("Invalid date/time format.", "warning")
+            return redirect(url_for('transactions'))
+
+        cursor.execute("""
+            SELECT transactions.id AS transaction_id, transactions.*, users.username, users.id AS user_id 
+            FROM transactions 
+            INNER JOIN users ON transactions.user_id = users.id
+            WHERE transaction_time BETWEEN ? AND ? AND transactions.is_deleted != 1
+        """, (start_datetime_str, end_datetime_str))
+        transactions = cursor.fetchall()
+
+    elif q:
+        try:
+            if q.strip().isdigit():
+                transaction_id = int(q.strip())
+                cursor.execute("""
+                    SELECT transactions.id AS transaction_id, transactions.*, users.username, users.id AS user_id 
+                    FROM transactions 
+                    INNER JOIN users ON transactions.user_id = users.id
+                    WHERE transactions.id = ? AND transactions.is_deleted != 1
+                """, (transaction_id,))
+                transactions = cursor.fetchall()
+                if not transactions:
+                    flash(f"Transaction ID '{q}' not found", "warning")
+            else:
+                q_lower = q.strip().lower()
+                cursor.execute("""
+                    SELECT transactions.id AS transaction_id, transactions.*, users.username, users.id AS user_id 
+                    FROM transactions 
+                    INNER JOIN users ON transactions.user_id = users.id
+                    WHERE LOWER(users.username) LIKE ? AND transactions.is_deleted != 1
+                """, (f"%{q_lower}%",))
+                transactions = cursor.fetchall()
+                if not transactions:
+                    flash(f"Username '{q}' not found", "warning")
+        except Exception as e:
+            flash(f"An error occurred: {str(e)}", "danger")
+            transactions = []
+
+    else:
+        cursor.execute("""
+            SELECT transactions.id AS transaction_id, transactions.*, users.username, users.id AS user_id
+            FROM transactions 
+            INNER JOIN users ON transactions.user_id = users.id
+            WHERE transactions.is_deleted != 1
+        """)
+        transactions = cursor.fetchall()
+
+    conn.close()
+
+    formatted_transactions = []
+    for t in transactions:
+        transaction_time = datetime.strptime(t[3], '%Y-%m-%d %H:%M:%S')
+        formatted_time = transaction_time.strftime('%Y-%m-%d %I:%M %p')  # Format to include AM/PM
+        formatted_transactions.append((t[0], t[9], formatted_time, t[6], t[4], t[5], t[8]))
+
+    return render_template('transactions.html', transactions=formatted_transactions, transaction=transaction, products=products, q=q, startdate=startdate, enddate=enddate)
 # ---------------------------------------------------------------------------------------------
 # INVENTORY MANAGEMENT 
 # Create
@@ -197,6 +291,7 @@ def add_product():
 @app.route("/inventory/edit/<int:product_id>", methods=["GET", "POST"])
 @login_required
 def edit_product(product_id):
+    print(f"Editing product with ID: {product_id}") 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         price = request.form.get("price", "").strip()
@@ -212,7 +307,7 @@ def edit_product(product_id):
             if price <= 0:
                 raise ValueError("Price must be greater than zero")
         except ValueError as e:
-            flash(f"Price must be a valid positive number: {e}", "warning")
+            flash(f"{e}", "warning")
             return redirect(url_for("inventory"))
 
         try:
@@ -274,10 +369,10 @@ def sales():
 def users():
     if not is_admin():
         return redirect(url_for("purchase"))
-
+    
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id, username, role FROM users")
+        cur.execute("SELECT id, username, role FROM users WHERE is_deleted != 1")
         user_list = cur.fetchall()
     return render_template("users.html", users=user_list)
 
@@ -366,7 +461,7 @@ def delete_user(user_id):
     
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
-        cur.execute("DELETE FROM users WHERE id=?", (user_id,))
+        cur.execute("UPDATE users SET is_deleted = 1 WHERE id=?", (user_id,))
         conn.commit()
     flash("User deleted successfully", "success")
     return redirect(url_for("users"))

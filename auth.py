@@ -46,11 +46,12 @@ def init_db(db_path):
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
-                transaction_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                cash DECIMAL(10, 2) NOT NULL,
-                change DECIMAL(10, 2) NOT NULL,
-                total_amount DECIMAL(10, 2) NOT NULL,
-                is_deleted BOOLEAN DEFAULT 0,
+                transaction_time DATETIME DEFAULT (DATETIME('now', '+8 hours')),
+                cash NUMERIC(10, 2) NOT NULL,
+                change NUMERIC(10, 2) NOT NULL,
+                total_amount NUMERIC(10, 2) NOT NULL,
+                is_deleted INTEGER DEFAULT 0,
+                mode_of_payment TEXT NOT NULL CHECK(mode_of_payment IN ('cash', 'gcash')),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
         ''')

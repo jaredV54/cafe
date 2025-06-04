@@ -1,0 +1,39 @@
+{% if transaction %}
+<hr>
+<h3>Receipt Details for #{{ transaction[1] }}</h3>
+<p><strong>Date & Time:</strong> {{ transaction[3] }}</p>
+<p><strong>Mode of Payment:</strong> {{ transaction[8] }}</p>
+
+<h4>Products</h4>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in products %}
+        <tr>
+            <td>{{ p[0] }}</td>
+            <td>{{ p[1] }}</td>
+            <td>{{ p[2] }}</td>
+            <td>{{ p[3] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p><strong>Total Amount:</strong> {{ transaction[6] }}</p>
+<p><strong>Cash:</strong> {{ transaction[4] }}</p>
+<p><strong>Change:</strong> {{ transaction[5] }}</p>
+<button id="cancel-button">Cancel View</button>
+
+<script>
+    document.getElementById('cancel-button').addEventListener('click', function() {
+        window.location.href = "{{ url_for('transactions') }}";
+    });
+</script>
+{% endif %}

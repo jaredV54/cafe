@@ -61,6 +61,7 @@
 
             <div>
                 <input type="text" name="search-bar" id="search-query" placeholder="Search for an item...">
+                <button type="button" id="clear-search-button">Clear Search</button>
             </div>
             
             <ul>
@@ -91,4 +92,11 @@
 </section>
 
 <script type="module" src="{{ url_for('static', filename='js/inventory.js') }}"></script>
+<script>
+    window.routes = {
+        editProduct: "{{ url_for('edit_product', product_id=0).replace('0', '') }}",
+        addProduct: "{{ url_for('add_product') }}"
+    };
+</script>
+
 {% endblock %}

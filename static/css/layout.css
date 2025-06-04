@@ -129,6 +129,7 @@ nav > ul {
 
 nav a {
   color: var(--brown-light);
+  outline: none;
 }
 
 .logout {

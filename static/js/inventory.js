@@ -24,7 +24,7 @@ function selectProduct(element) {
         document.getElementById('form-title').innerText = 'Update Product';
         document.getElementById('submit-button').innerText = 'Update';
         
-        const editUrl = "{{ url_for('edit_product', product_id='0') }}".replace('/0', '/' + id);
+        const editUrl = window.routes.editProduct + id;
         document.getElementById('product-form').action = editUrl;
         
         document.getElementById('cancel-button').style.display = 'inline';
@@ -50,6 +50,14 @@ document.getElementById('cancel-button').onclick = function() {
         }
 };
 
+document.getElementById('clear-search-button').addEventListener('click', function() {
+    document.getElementById('search-query').value = '';
+    const products = document.querySelectorAll('.product-item');
+    products.forEach(product => {
+        product.style.display = '';
+    });
+});
+
 document.getElementById('search-query').addEventListener('input', function() {
     const query = this.value.toLowerCase();
     const products = document.querySelectorAll('.product-item');
@@ -65,3 +73,4 @@ document.getElementById('search-query').addEventListener('input', function() {
 });
 
 window.selectProduct = selectProduct;
+

@@ -12,10 +12,19 @@
                 <input type="hidden" name="user_id" value="{{ session.user_id }}">
                 <input type="hidden" name="total_amount" id="form-total-amount" value="0">
                 <input type="hidden" name="products" id="form-products" value="">
-                <label for="cash-amount">Cash Amount: </label>
-                <input type="number" id="cash-amount" name="cash_amount" min="0" step="0.01" required>
-                <p id="cash-error" style="color: red; display: none;">Invalid cash amount. It must be positive and at least equal to the total amount.</p>
-                <p>Change: P<span id="change-amount">0.00</span></p>
+                
+                <label for="mode-of-payment">Mode of Payment:</label>
+                <select id="mode-of-payment" name="mode_of_payment" required>
+                    <option value="cash">Cash</option>
+                    <option value="gcash">GCash</option>
+                </select>
+                
+                <div>
+                    <label for="cash-amount">Cash Amount: <p id="cash-error" style="color: red; display: none;">Must be positive and at least equal to the total amount.</p></label>
+                    <input type="number" id="cash-amount" name="cash_amount" min="0" step="0.01" required>
+                    <p>Change: P<span id="change-amount">0.00</span></p>
+                </div>
+                
                 <input type="hidden" name="change" id="form-change" value="0">
                 <button type="submit" id="submit-button" disabled>Submit Transaction</button>
             </form>

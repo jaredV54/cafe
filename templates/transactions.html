@@ -1,6 +1,79 @@
 {% extends 'layout.html' %}
 {% block content %}
-
 <h2>Transaction Records</h2>
+<form method="GET" id="filter-form">
+    <label>From:</label>
+    <input type="datetime-local" name="startdate" value="{{ request.args.get('startdate', '') }}">
+    <label>To:</label>
+    <input type="datetime-local" name="enddate" value="{{ request.args.get('enddate', '') }}">
+    <button type="submit" value="Filter">Filter</button>
+    <button type="button" id="clear-date-button">Clear Date Filters</button><br><br>
+    <label>Search:</label>
+    <input type="text" placeholder="Receipt ID or Staff" name="q" id="search-query" value="{{ request.args.get('q', '') }}">
+    <button type="button" id="clear-search-button">Clear Search</button>
+</form>
+    
+<table border="1" style="margin-top: 10px;">
+    <thead>
+        <tr>
+            <th>Receipt ID</th>
+            <th>Staff</th>
+            <th>Date & Time</th>
+            <th>Total Amount</th>
+            <th>Cash</th>
+            <th>Change</th>
+            <th>Mode of Payment</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody id="transaction-table-body">
+        {% for t in transactions %}
+        <tr class="transaction-item">
+            <td>{{ t[0] }}</td> 
+            <td>{{ t[1] }}</td> 
+            <td>{{ t[2] }}</td> 
+            <td>{{ t[3] }}</td> 
+            <td>{{ t[4] }}</td> 
+            <td>{{ t[5] }}</td> 
+            <td>{{ t[6] }}</td> 
+            <td>
+                <a href="{{ url_for('transactions') }}?receipt_id={{ t[0] }}">View Receipt</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
+{% include 'receipt.html' %}
+
+<script>
+    document.getElementById('search-query').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        const transactions = document.querySelectorAll('.transaction-item');
+        
+        transactions.forEach(transaction => {
+            const receiptId = transaction.children[0].textContent.toLowerCase();
+            const staffName = transaction.children[1].textContent.toLowerCase();
+            if (receiptId.includes(query) || staffName.includes(query)) {
+                transaction.style.display = '';
+            } else {
+                transaction.style.display = 'none';
+            }
+        });
+    });
+
+    document.getElementById('clear-date-button').addEventListener('click', function() {
+        document.querySelector('input[name="startdate"]').value = '';
+        document.querySelector('input[name="enddate"]').value = '';
+        document.getElementById('filter-form').submit();
+    });
+
+    document.getElementById('clear-search-button').addEventListener('click', function() {
+        document.getElementById('search-query').value = '';
+        const transactions = document.querySelectorAll('.transaction-item');
+        transactions.forEach(transaction => {
+            transaction.style.display = '';
+        });
+    });
+</script>
 {% endblock %}
