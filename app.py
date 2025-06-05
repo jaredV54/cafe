@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, session, request, flash
+from flask import Flask, render_template, redirect, url_for, session, request, flash, jsonify
 from auth import login_required, is_admin, init_db
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
@@ -128,12 +128,18 @@ def purchase():
                     """, (transaction_id, product['id'], product['name'], product['quantity'], product['price'], product['subtotal']))
 
                 conn.commit()
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify(success=True, receipt_id=transaction_id)
                 flash("Transaction recorded successfully!", "success")
                 return redirect(url_for('purchase')) 
         except sqlite3.Error as e:
             conn.rollback()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message=f"An error occurred while recording the transaction: {e}")
             flash(f"An error occurred while recording the transaction: {e}", "warning")
         except json.JSONDecodeError:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message="Invalid product data received.")
             flash("Invalid product data received.", "warning")
 
     return getProducts()
@@ -147,7 +153,7 @@ def transactions():
     q = request.args.get('q')
     startdate = request.args.get('startdate')
     enddate = request.args.get('enddate')
-    receipt_id = request.args.get('receipt_id')  # New parameter for specific receipt
+    receipt_id = request.args.get('receipt_id')  
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
@@ -156,7 +162,6 @@ def transactions():
     products = []
 
     if receipt_id:
-        # Fetch specific transaction details
         cursor.execute("""
             SELECT transactions.id AS transaction_id, transactions.*, users.username, users.id AS user_id 
             FROM transactions 
@@ -172,6 +177,11 @@ def transactions():
                 WHERE transaction_id = ?
             """, (receipt_id,))
             products = cursor.fetchall()
+            # Format cash, change, and total_amount for the receipt
+            transaction = list(transaction)
+            transaction[4] = f"{float(transaction[4]):.2f}"  # cash
+            transaction[5] = f"{float(transaction[5]):.2f}"  # change
+            transaction[6] = f"{float(transaction[6]):.2f}"  # total_amount
 
     if startdate and enddate:
         try:
@@ -237,9 +247,19 @@ def transactions():
     for t in transactions:
         transaction_time = datetime.strptime(t[3], '%Y-%m-%d %H:%M:%S')
         formatted_time = transaction_time.strftime('%Y-%m-%d %I:%M %p')  # Format to include AM/PM
-        formatted_transactions.append((t[0], t[9], formatted_time, t[6], t[4], t[5], t[8]))
+        # Format cash, change, and total_amount to 2 decimal places
+        formatted_transactions.append((
+            t[0],                # transaction_id
+            t[9],                # username
+            formatted_time,      # formatted date
+            f"{float(t[6]):.2f}",# total_amount
+            f"{float(t[4]):.2f}",# cash
+            f"{float(t[5]):.2f}",# change
+            t[8]                 # mode_of_payment
+        ))
 
     return render_template('transactions.html', transactions=formatted_transactions, transaction=transaction, products=products, q=q, startdate=startdate, enddate=enddate)
+
 # ---------------------------------------------------------------------------------------------
 # INVENTORY MANAGEMENT 
 # Create
@@ -349,13 +369,173 @@ def delete_product(product_id):
 # SALES RECORD 
 # Read
 
-@app.route("/sales")
+@app.route("/sales", methods=["GET"])
 @login_required
 def sales():
     if not is_admin():
         return redirect(url_for("purchase"))
-    
-    return render_template("sales.html")
+
+    view = request.args.get("view", "daily")
+    mop = request.args.get("mop", "all")
+
+    today = datetime.now()
+    weekday_map = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+    from_date = to_date = today.strftime("%Y-%m-%d")
+    from_month = to_month = today.strftime("%Y-%m")
+    from_year = to_year = today.strftime("%Y")
+
+    if view == "daily":
+        from_date = request.args.get("from_date", from_date)
+        to_date = request.args.get("to_date", to_date)
+        try:
+            from_dt = datetime.strptime(from_date, "%Y-%m-%d")
+            to_dt = datetime.strptime(to_date, "%Y-%m-%d")
+            if to_dt < from_dt:
+                flash("End date cannot be before start date.", "warning")
+                return redirect(url_for("sales", view=view, mop=mop))
+        except ValueError:
+            flash("Invalid date format.", "warning")
+            return redirect(url_for("sales", view=view, mop=mop))
+    elif view == "monthly":
+        from_month = request.args.get("from_month", from_month)
+        to_month = request.args.get("to_month", to_month)
+        try:
+            from_dt = datetime.strptime(from_month, "%Y-%m")
+            to_dt = datetime.strptime(to_month, "%Y-%m")
+            if to_dt < from_dt:
+                flash("End month cannot be before start month.", "warning")
+                return redirect(url_for("sales", view=view, mop=mop))
+        except ValueError:
+            flash("Invalid month format.", "warning")
+            return redirect(url_for("sales", view=view, mop=mop))
+    elif view == "yearly":
+        from_year = request.args.get("from_year", from_year)
+        to_year = request.args.get("to_year", to_year)
+        try:
+            from_yr = int(from_year)
+            to_yr = int(to_year)
+            if to_yr < from_yr:
+                flash("End year cannot be before start year.", "warning")
+                return redirect(url_for("sales", view=view, mop=mop))
+        except ValueError:
+            flash("Invalid year format.", "warning")
+            return redirect(url_for("sales", view=view, mop=mop))
+
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    daily_data = []
+    monthly_data = []
+    yearly_data = []
+    total_revenue = 0
+
+    if view == "daily":
+        if mop == "all":
+            params = [from_date, to_date]
+            cur.execute("""
+                SELECT 
+                    strftime('%w', transaction_time) as weekday,
+                    strftime('%Y-%m-%d', transaction_time) as date,
+                    SUM(total_amount)
+                FROM transactions
+                WHERE is_deleted != 1 AND date(transaction_time) BETWEEN ? AND ?
+                GROUP BY date
+                ORDER BY date DESC
+            """, params)
+            daily_data = cur.fetchall()
+            total_revenue = sum(row[2] for row in daily_data)
+        else:
+            params = [from_date, to_date, mop]
+            cur.execute("""
+                SELECT 
+                    strftime('%w', transaction_time) as weekday,
+                    strftime('%Y-%m-%d', transaction_time) as date,
+                    mode_of_payment,
+                    SUM(total_amount)
+                FROM transactions
+                WHERE is_deleted != 1 AND date(transaction_time) BETWEEN ? AND ? AND mode_of_payment = ?
+                GROUP BY date, mode_of_payment
+                ORDER BY date DESC
+            """, params)
+            daily_data = cur.fetchall()
+            total_revenue = sum(row[3] for row in daily_data)
+
+    elif view == "monthly":
+        if mop == "all":
+            params = [from_month, to_month]
+            cur.execute("""
+                SELECT 
+                    strftime('%Y-%m', transaction_time) as month,
+                    SUM(total_amount)
+                FROM transactions
+                WHERE is_deleted != 1 AND strftime('%Y-%m', transaction_time) BETWEEN ? AND ?
+                GROUP BY month
+                ORDER BY month DESC
+            """, params)
+            monthly_data = cur.fetchall()
+            total_revenue = sum(row[1] for row in monthly_data)
+        else:
+            params = [from_month, to_month, mop]
+            cur.execute("""
+                SELECT 
+                    strftime('%Y-%m', transaction_time) as month,
+                    mode_of_payment,
+                    SUM(total_amount)
+                FROM transactions
+                WHERE is_deleted != 1 AND strftime('%Y-%m', transaction_time) BETWEEN ? AND ? AND mode_of_payment = ?
+                GROUP BY month, mode_of_payment
+                ORDER BY month DESC
+            """, params)
+            monthly_data = cur.fetchall()
+            total_revenue = sum(row[2] for row in monthly_data)
+
+    elif view == "yearly":
+        if mop == "all":
+            params = [from_year, to_year]
+            cur.execute("""
+                SELECT 
+                    strftime('%Y', transaction_time) as year,
+                    SUM(total_amount)
+                FROM transactions
+                WHERE is_deleted != 1 AND strftime('%Y', transaction_time) BETWEEN ? AND ?
+                GROUP BY year
+                ORDER BY year DESC
+            """, params)
+            yearly_data = cur.fetchall()
+            total_revenue = sum(row[1] for row in yearly_data)
+        else:
+            params = [from_year, to_year, mop]
+            cur.execute("""
+                SELECT 
+                    strftime('%Y', transaction_time) as year,
+                    mode_of_payment,
+                    SUM(total_amount)
+                FROM transactions
+                WHERE is_deleted != 1 AND strftime('%Y', transaction_time) BETWEEN ? AND ? AND mode_of_payment = ?
+                GROUP BY year, mode_of_payment
+                ORDER BY year DESC
+            """, params)
+            yearly_data = cur.fetchall()
+            total_revenue = sum(row[2] for row in yearly_data)
+
+    conn.close()
+
+    return render_template(
+        "sales.html",
+        view=view,
+        mop=mop,
+        from_date=from_date,
+        to_date=to_date,
+        from_month=from_month,
+        to_month=to_month,
+        from_year=from_year,
+        to_year=to_year,
+        daily_data=daily_data,
+        monthly_data=monthly_data,
+        yearly_data=yearly_data,
+        total_revenue=total_revenue,
+        weekday_map=weekday_map
+    )
 
 # ---------------------------------------------------------------------------------------------
 # USER MANAGEMENT

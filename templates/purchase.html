@@ -1,6 +1,9 @@
 {% extends 'layout.html' %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/purchase.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/receipt.css') }}">
+
+<div id="purchase-message"></div>
 
 <section>
     <div>
@@ -35,17 +38,17 @@
         <div class="purchase">
             <div id="category-container">
                 <ul class="categories">
-                    <li class="{% if selected_category == 'all' %}active{% endif %}">
-                        <a href="?category=all">All</a>
+                    <li class="{% if selected_category == 'all' %}active{% endif %}" data-category="all">
+                        <a href="#" onclick="setCategory('all')">All</a>
                     </li>
-                    <li class="{% if selected_category == 'hot-coffee' %}active{% endif %}">
-                        <a href="?category=hot-coffee">Hot Coffee</a>
+                    <li class="{% if selected_category == 'hot-coffee' %}active{% endif %}" data-category="hot-coffee">
+                        <a href="#" onclick="setCategory('hot-coffee')">Hot Coffee</a>
                     </li>
-                    <li class="{% if selected_category == 'cold-coffee' %}active{% endif %}">
-                        <a href="?category=cold-coffee">Cold Coffee</a>
+                    <li class="{% if selected_category == 'cold-coffee' %}active{% endif %}" data-category="cold-coffee">
+                        <a href="#" onclick="setCategory('cold-coffee')">Cold Coffee</a>
                     </li>
-                    <li class="{% if selected_category == 'pastries' %}active{% endif %}">
-                        <a href="?category=pastries">Pastries</a>
+                    <li class="{% if selected_category == 'pastries' %}active{% endif %}" data-category="pastries">
+                        <a href="#" onclick="setCategory('pastries')">Pastries</a>
                     </li>
                 </ul>
             </div>
@@ -54,11 +57,11 @@
                 <input type="text" name="search-bar" id="search-query" placeholder="Search for an item...">
             </div>
             
-            <ul>
+            <ul id="product-list">
                 {% for product in products %}
                     {% if product['name'] %}
                     <li 
-                        class="product-item"
+                        class="product-item{% if not product['is_available'] %} unavailable{% endif %}"
                         data-id="{{ product['id'] }}"
                         data-name="{{ product['name']|replace("'", "\\'")|replace('\\', '\\\\') }}"
                         data-price="{{ product['price'] }}"
@@ -77,7 +80,41 @@
     </div>
 </section>
 
+<div id="receipt-modal">
+  <div id="receipt-wrapper">
+    <div id="receipt-area" class="receipt-area"></div>
+    <button id="print-receipt-btn" class="receipt-btn" onclick="printDiv('receipt-area')">Print Receipt</button>
+    <button class="receipt-btn" onclick="document.getElementById('receipt-modal').style.display='none';">Close</button>
+  </div>
+</div>
+
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectedCategory = localStorage.getItem('selectedCategory') || 'all';
+        filterItems(selectedCategory);
+    });
+
+    function setCategory(category) {
+        localStorage.setItem('selectedCategory', category);
+        filterItems(category);
+    }
+
+
+    function filterItems(category) {
+        const items = document.querySelectorAll('.product-item');
+        items.forEach(item => {
+            if (category === 'all' || item.dataset.category === category) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        document.querySelectorAll('.categories li').forEach(li => {
+            li.classList.toggle('active', li.dataset.category === category);
+        });
+    }
+
     document.getElementById('search-query').addEventListener('input', function() {
         const query = this.value.toLowerCase();
         const products = document.querySelectorAll('.product-item');
@@ -107,6 +144,7 @@
       const selectedProducts = {};
 
       productItems.forEach(item => {
+          if (item.getAttribute('data-available') === 'false') return;
           item.addEventListener('click', function () {
               const productId = this.getAttribute('data-id');
               const productName = this.getAttribute('data-name');
@@ -224,6 +262,100 @@
               submitButton.disabled = true;
           }
       }
+
+      function generateReceiptHTML(transaction, receipt_id) {
+          let itemsHtml = '';
+          transaction.products.forEach(p => {
+              itemsHtml += `<tr>
+                  <td>${p.name}</td>
+                  <td>${p.quantity}</td>
+                  <td>P${parseFloat(p.price).toFixed(2)}</td>
+              </tr>`;
+          });
+          const now = new Date();
+          return `
+              <div class="receipt-header">Cafe Name</div>
+              <div class="receipt-row receipt-number">Receipt #: ${receipt_id}</div>
+              <div class="receipt-row receipt-mode">Mode: ${transaction.mode_of_payment}</div>
+              <div class="receipt-row receipt-date">Date: ${now.toLocaleString()}</div>
+              <hr class="receipt-hr">
+              <table class="receipt-table">
+                  <tr class="receipt-table-header">
+                      <td>Item</td>
+                      <td>Qty</td>
+                      <td>Price</td>
+                  </tr>
+                  ${itemsHtml}
+              </table>
+              <hr class="receipt-hr">
+              <div class="receipt-row receipt-total">Total: P${parseFloat(transaction.total_amount).toFixed(2)}</div>
+              <div class="receipt-row receipt-cash">Cash: P${parseFloat(transaction.cash_amount).toFixed(2)}</div>
+              <div class="receipt-row receipt-change">Change: P${parseFloat(transaction.change).toFixed(2)}</div>
+              `;
+      }
+
+      function printDiv(divId) {
+          var printContents = document.getElementById(divId).innerHTML;
+          var originalContents = document.body.innerHTML;
+          document.body.innerHTML = printContents;
+          window.print();
+          document.body.innerHTML = originalContents;
+          // No reload here
+      }
+      window.printDiv = printDiv;
+
+      document.getElementById('transaction-form').addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const transaction = {
+              user_id: formData.get('user_id'),
+              total_amount: formData.get('total_amount'),
+              products: JSON.parse(formData.get('products')),
+              mode_of_payment: formData.get('mode_of_payment'),
+              cash_amount: formData.get('cash_amount'),
+              change: formData.get('change')
+          };
+
+          let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+          transactions.push(transaction);
+          localStorage.setItem('transactions', JSON.stringify(transactions));
+
+          fetch('/purchase', {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+              body: new URLSearchParams([...formData])
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  document.getElementById('receipt-area').innerHTML = generateReceiptHTML(transaction, data.receipt_id);
+                  document.getElementById('receipt-modal').style.display = 'flex';
+                  document.getElementById('transaction-form').reset();
+                  document.getElementById('selected-products-section').innerHTML = '';
+                  document.getElementById('total-amount-section').style.display = 'none';
+
+                  for (const key in selectedProducts) {
+                      delete selectedProducts[key];
+                  }
+                  document.querySelectorAll('.product-item.active_product').forEach(item => {
+                      item.classList.remove('active_product');
+                  });
+
+                  document.getElementById('purchase-message').innerHTML =
+                      '<div class="flash-message flash-success">Transaction recorded successfully!</div>';
+                  setTimeout(() => {
+                      document.getElementById('purchase-message').innerHTML = '';
+                  }, 3000);
+
+              } else {
+                  alert(data.message || 'Transaction failed.');
+              }
+          })
+          .catch(() => {
+              alert('Error submitting transaction.');
+          });
+      });
   });
 </script>
 {% endblock %}

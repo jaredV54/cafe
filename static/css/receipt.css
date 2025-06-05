@@ -1,0 +1,114 @@
+#receipt-modal, .receipt-modal {
+  background: rgba(0,0,0,0.3);
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+#receipt-wrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  margin: 0;
+  padding: 10px;
+  background-color: #fff;
+}
+#receipt-area {
+  font-size: 13px;
+  width: 280px;
+  background: #fff;
+  color: #222;
+  padding: 18px 10px 10px 10px;
+  border: 1px dashed #bbb;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  font-family: 'Courier New', Courier, monospace;
+}
+.receipt-header {
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.receipt-hr {
+  border: none;
+  border-top: 1px dashed #bbb;
+  margin: 7px 0;
+}
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 5px;
+}
+.receipt-table td {
+  padding: 2px 0;
+  font-size: 13px;
+}
+.receipt-table tr td:first-child {
+  text-align: left;
+}
+.receipt-table tr td:not(:first-child) {
+  text-align: right;
+}
+.receipt-table tr {
+  border-bottom: none;
+}
+.receipt-total, .receipt-cash, .receipt-change {
+  font-weight: bold;
+}
+.receipt-btn {
+  margin: 8px 4px 8px 0;
+  padding: 4px 14px;
+  font-size: 13px;
+  border-radius: 3px;
+  border: 1px solid var(--brown-ver1, #bbb);
+  background: #f8f8f8;
+  color: var(--brown-ver1, #222);
+  cursor: pointer;
+}
+@media print {
+  body * { visibility: hidden !important; }
+  #receipt-area, #receipt-area * { visibility: visible !important; }
+  #receipt-area {
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 13px !important;
+    width: 280px !important;
+    background: #fff !important;
+    color: #222 !important;
+    padding: 18px 10px 10px 10px !important;
+  }
+  .receipt-hr {
+    border: none !important;
+    border-top: 1px dashed #bbb !important;
+    margin: 7px 0 !important;
+  }
+  .receipt-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 5px !important;
+  }
+  .receipt-table td {
+    padding: 2px 0 !important;
+    font-size: 13px !important;
+  }
+  .receipt-table tr td:first-child {
+    text-align: left !important;
+  }
+  .receipt-table tr td:not(:first-child) {
+    text-align: right !important;
+  }
+  .receipt-total, .receipt-cash, .receipt-change {
+    font-weight: bold !important;
+  }
+  #print-receipt-btn, .receipt-btn[onclick*="window.location.reload"] {
+    display: none !important;
+  }
+}

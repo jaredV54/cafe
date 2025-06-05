@@ -1,6 +1,170 @@
-{% extends 'layout.html' %}{% block content %}
+{% extends 'layout.html' %}
+{% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sales.css') }}">
 
 <h2>Sales Report</h2>
 
+<form method="get" id="sales-filter-form" style="margin-bottom: 20px;">
+    <label>View:</label>
+    <select name="view" id="view-select">
+        <option value="daily" {% if view == 'daily' %}selected{% endif %}>Daily</option>
+        <option value="monthly" {% if view == 'monthly' %}selected{% endif %}>Monthly</option>
+        <option value="yearly" {% if view == 'yearly' %}selected{% endif %}>Yearly</option>
+    </select>
+
+    <span id="date-range-filter">
+        {% if view == 'daily' %}
+            <label>From:</label>
+            <input type="date" name="from_date" value="{{ from_date }}">
+            <label>To:</label>
+            <input type="date" name="to_date" value="{{ to_date }}">
+        {% elif view == 'monthly' %}
+            <label>From:</label>
+            <input type="month" name="from_month" value="{{ from_month }}">
+            <label>To:</label>
+            <input type="month" name="to_month" value="{{ to_month }}">
+        {% elif view == 'yearly' %}
+            <label>From:</label>
+            <input type="number" name="from_year" min="2000" max="2100" value="{{ from_year }}" style="width: 80px;">
+            <label>To:</label>
+            <input type="number" name="to_year" min="2000" max="2100" value="{{ to_year }}" style="width: 80px;">
+        {% endif %}
+    </span>
+
+    <label for="mop">Mode of Payment:</label>
+    <select name="mop" id="mop-select">
+        <option value="all" {% if mop == 'all' %}selected{% endif %}>All</option>
+        <option value="cash" {% if mop == 'cash' %}selected{% endif %}>Cash</option>
+        <option value="gcash" {% if mop == 'gcash' %}selected{% endif %}>GCash</option>
+    </select>
+
+    <button type="submit">Filter</button>
+</form>
+
+<div id="print-area">
+    {% if view == 'daily' %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Date</th>
+                    <th>MoP</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if mop == 'all' %}
+                    {% for row in daily_data %}
+                    <tr>
+                        <td>{{ weekday_map[row[0]|int] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>All</td>
+                        <td>P{{ '%.2f'|format(row[2]) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align:center;">No data found.</td></tr>
+                    {% endfor %}
+                {% else %}
+                    {% for row in daily_data %}
+                    <tr>
+                        <td>{{ weekday_map[row[0]|int] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2]|capitalize }}</td>
+                        <td>P{{ '%.2f'|format(row[3]) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align:center;">No data found.</td></tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    {% elif view == 'monthly' %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>MoP</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if mop == 'all' %}
+                    {% for row in monthly_data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>All</td>
+                        <td>P{{ '%.2f'|format(row[1]) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" style="text-align:center;">No data found.</td></tr>
+                    {% endfor %}
+                {% else %}
+                    {% for row in monthly_data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1]|capitalize }}</td>
+                        <td>P{{ '%.2f'|format(row[2]) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" style="text-align:center;">No data found.</td></tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    {% elif view == 'yearly' %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    <th>MoP</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if mop == 'all' %}
+                    {% for row in yearly_data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>All</td>
+                        <td>P{{ '%.2f'|format(row[1]) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" style="text-align:center;">No data found.</td></tr>
+                    {% endfor %}
+                {% else %}
+                    {% for row in yearly_data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1]|capitalize }}</td>
+                        <td>P{{ '%.2f'|format(row[2]) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" style="text-align:center;">No data found.</td></tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <div>
+        Total Revenue: P{{ '%.2f'|format(total_revenue) }}
+    </div>
+</div>
+
+<button type="button" onclick="printDiv('print-area')" style="margin-bottom: 10px;">Print Sales Table</button>
+
+<script>
+    document.getElementById('view-select').addEventListener('change', function() {
+        document.getElementById('sales-filter-form').submit();
+    });
+
+    function printDiv(divId) {
+        var printContents = document.getElementById(divId).innerHTML;
+        var originalContents = document.body.innerHTML;
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        location.reload(); // reload to restore event listeners
+    }
+</script>
 {% endblock %}
