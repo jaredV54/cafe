@@ -2,53 +2,53 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sales.css') }}">
 
-<h2>Sales Report</h2>
+<h2 class="sales-title">Sales Report</h2>
 
-<form method="get" id="sales-filter-form" style="margin-bottom: 20px;">
-    <label>View:</label>
-    <select name="view" id="view-select">
+<form method="get" id="sales-filter-form" class="sales-filter-form" style="margin-bottom: 20px;">
+    <label for="view-select">View:</label>
+    <select name="view" id="view-select" class="sales-view-select">
         <option value="daily" {% if view == 'daily' %}selected{% endif %}>Daily</option>
         <option value="monthly" {% if view == 'monthly' %}selected{% endif %}>Monthly</option>
         <option value="yearly" {% if view == 'yearly' %}selected{% endif %}>Yearly</option>
     </select>
 
-    <span id="date-range-filter">
+    <span id="date-range-filter" class="date-range-filter">
         {% if view == 'daily' %}
-            <label>From:</label>
-            <input type="date" name="from_date" value="{{ from_date }}">
-            <label>To:</label>
-            <input type="date" name="to_date" value="{{ to_date }}">
+            <label for="from_date">From:</label>
+            <input type="date" name="from_date" id="from_date" class="sales-date-input" value="{{ from_date }}">
+            <label for="to_date">To:</label>
+            <input type="date" name="to_date" id="to_date" class="sales-date-input" value="{{ to_date }}">
         {% elif view == 'monthly' %}
-            <label>From:</label>
-            <input type="month" name="from_month" value="{{ from_month }}">
-            <label>To:</label>
-            <input type="month" name="to_month" value="{{ to_month }}">
+            <label for="from_month">From:</label>
+            <input type="month" name="from_month" id="from_month" class="sales-month-input" value="{{ from_month }}">
+            <label for="to_month">To:</label>
+            <input type="month" name="to_month" id="to_month" class="sales-month-input" value="{{ to_month }}">
         {% elif view == 'yearly' %}
-            <label>From:</label>
-            <input type="number" name="from_year" min="2000" max="2100" value="{{ from_year }}" style="width: 80px;">
-            <label>To:</label>
-            <input type="number" name="to_year" min="2000" max="2100" value="{{ to_year }}" style="width: 80px;">
+            <label for="from_year">From:</label>
+            <input type="number" name="from_year" id="from_year" class="sales-year-input" min="2000" max="2100" value="{{ from_year }}" style="width: 80px;">
+            <label for="to_year">To:</label>
+            <input type="number" name="to_year" id="to_year" class="sales-year-input" min="2000" max="2100" value="{{ to_year }}" style="width: 80px;">
         {% endif %}
     </span>
 
-    <label for="mop">Mode of Payment:</label>
-    <select name="mop" id="mop-select">
+    <label for="mop-select">Mode of Payment:</label>
+    <select name="mop" id="mop-select" class="sales-mop-select">
         <option value="all" {% if mop == 'all' %}selected{% endif %}>All</option>
         <option value="cash" {% if mop == 'cash' %}selected{% endif %}>Cash</option>
         <option value="gcash" {% if mop == 'gcash' %}selected{% endif %}>GCash</option>
     </select>
 
-    <button type="submit">Filter</button>
+    <button type="submit" class="sales-filter-btn">Filter</button>
 </form>
 
-<div id="print-area">
+<div id="print-area" class="sales-print-area">
     {% if view == 'daily' %}
-        <table border="1" cellpadding="5" cellspacing="0">
+        <table class="sales-table sales-table-daily">
             <thead>
                 <tr>
                     <th>Day</th>
                     <th>Date</th>
-                    <th>MoP</th>
+                    <th>Mode of Payment</th>
                     <th>Revenue</th>
                 </tr>
             </thead>
@@ -79,11 +79,11 @@
             </tbody>
         </table>
     {% elif view == 'monthly' %}
-        <table border="1" cellpadding="5" cellspacing="0">
+        <table class="sales-table sales-table-monthly">
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>MoP</th>
+                    <th>Mode of Payment</th>
                     <th>Revenue</th>
                 </tr>
             </thead>
@@ -112,11 +112,11 @@
             </tbody>
         </table>
     {% elif view == 'yearly' %}
-        <table border="1" cellpadding="5" cellspacing="0">
+        <table class="sales-table sales-table-yearly">
             <thead>
                 <tr>
                     <th>Year</th>
-                    <th>MoP</th>
+                    <th>Mode of Payment</th>
                     <th>Revenue</th>
                 </tr>
             </thead>
@@ -146,12 +146,14 @@
         </table>
     {% endif %}
 
-    <div>
+    <div class="sales-total-revenue">
         Total Revenue: P{{ '%.2f'|format(total_revenue) }}
     </div>
 </div>
 
-<button type="button" onclick="printDiv('print-area')" style="margin-bottom: 10px;">Print Sales Table</button>
+<div class="sales-total-revenue">
+    <button type="button" class="sales-print-btn" onclick="printDiv('print-area')"">Print Sales Table</button>
+</div>
 
 <script>
     document.getElementById('view-select').addEventListener('change', function() {
@@ -164,7 +166,8 @@
         document.body.innerHTML = printContents;
         window.print();
         document.body.innerHTML = originalContents;
-        location.reload(); // reload to restore event listeners
+        location.reload();
     }
+    window.printDiv = printDiv;
 </script>
 {% endblock %}

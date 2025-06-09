@@ -22,26 +22,26 @@
         {% if session.user %}
             <ul class="nav-list">
                 <li>
-                    <a class="{% if request.path == url_for('purchase') %}nav_active{% endif %}" href="{{ url_for('purchase') }}">Purchase</a>
+                    <a class="{% if '/purchase' in request.path %}nav_active{% endif %}" href="{{ url_for('purchase') }}">Purchase</a>
                 </li>
                 <li>
-                    <a class="{% if request.path == url_for('transactions') %}nav_active{% endif %}" href="{{ url_for('transactions') }}">Transactions</a>
+                    <a class="{% if '/transactions' in request.path %}nav_active{% endif %}" href="{{ url_for('transactions') }}">Transactions</a>
                 </li>
 
                 {% if session.role == 'admin' %}
                     <li>
-                        <a class="{% if request.path == url_for('inventory') %}nav_active{% endif %}" href="{{ url_for('inventory') }}">Inventory</a>
+                        <a class="{% if '/inventory' in request.path %}nav_active{% endif %}" href="{{ url_for('inventory') }}">Inventory</a>
                     </li>
                     <li>
-                        <a class="{% if request.path == url_for('sales') %}nav_active{% endif %}" href="{{ url_for('sales') }}">Sales</a>
+                        <a class="{% if '/sales' in request.path %}nav_active{% endif %}" href="{{ url_for('sales') }}">Sales</a>
                     </li>
                     <li>
-                        <a class="{% if request.path == url_for('users') %}nav_active{% endif %}" href="{{ url_for('users') }}">Users</a>
+                        <a class="{% if '/users' in request.path %}nav_active{% endif %}" href="{{ url_for('users') }}">Users</a>
                     </li>
                 {% endif %}
 
                 <li class="logout">
-                    <a class="{% if request.path == url_for('logout') %}nav_active{% endif %}" href="{{ url_for('logout') }}">Logout</a>
+                    <a class="{% if '/logout' in request.path %}nav_active{% endif %}" href="{{ url_for('logout') }}">Logout</a>
                 </li>
             </ul>
         {% endif %}

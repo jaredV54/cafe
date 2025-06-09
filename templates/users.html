@@ -6,33 +6,29 @@
 <h1>User Management</h1>
 
 <h2>{{ 'Edit' if edit_user else 'Add New' }} User</h2>
-<form method="POST" action="{{ url_for('edit_user', user_id=edit_user.id) if edit_user else url_for('add_user') }}">
-    <label for="username">Username:</label><br>
-    <input type="text" name="username" id="username" required value="{{ edit_user.username if edit_user else '' }}"><br><br>
+<form method="POST" class="user-form" action="{{ url_for('edit_user', user_id=edit_user.id) if edit_user else url_for('add_user') }}">
+    <label for="username">Username:</label>
+    <input type="text" name="username" id="username" required value="{{ edit_user.username if edit_user else '' }}">
 
-    <label for="passkey">Password:</label><br>
-    <input type="password" name="passkey" id="passkey" {{ 'required' if not edit_user else '' }}><br>
-    {% if edit_user %}
-        <small>Leave password blank to keep current password</small><br>
-    {% endif %}
-    <br>
+    <label for="passkey">Password:</label>
+    <input type="password" name="passkey" id="passkey"
+        placeholder="{{ 'Blank = keep password' if edit_user else '' }}"
+        {{ 'required' if not edit_user else '' }}>
 
-    <label for="role">Role:</label><br>
+    <label for="role">Role:</label>
     <select name="role" id="role" required>
         <option value="admin" {% if edit_user and edit_user.role == 'admin' %}selected{% endif %}>Admin</option>
         <option value="staff" {% if edit_user and edit_user.role == 'staff' %}selected{% endif %}>Staff</option>
-    </select><br><br>
+    </select>
 
     <button type="submit">{{ 'Update' if edit_user else 'Add' }} User</button>
     {% if edit_user %}
-        <a href="{{ url_for('users') }}"><button>Cancel</button></a>
+        <button type="button" id="cancel-edit-btn">Cancel</button>
     {% endif %}
 </form>
 
-<hr>
-
 <h2>All Users</h2>
-<table border="1" cellpadding="5" cellspacing="0">
+<table>
     <thead>
         <tr>
             <th>Username</th>
@@ -42,15 +38,19 @@
     </thead>
     <tbody>
         {% for u in users %}
-        <tr class="{% if user and u[0] == user.id %}editing-user{% endif %}">
+        <tr>
             <td>{{ u[1] }}</td>
             <td>{{ u[2] }}</td>
-            <td>
-                <a href="{{ url_for('edit_user', user_id=u[0]) }}">
-                    <button type="button">Edit</button>
+            <td class="actions-cell">
+                <a href="{{ url_for('edit_user', user_id=u[0]) }}" class="{% if edit_user and u[0] == edit_user.id %}editing-user{% endif %} action-btn action-btn-edit">
+                    {% if edit_user and u[0] == edit_user.id %}
+                        Editing
+                    {% else %}
+                        Edit
+                    {% endif %}
                 </a>
-                <form method="POST" action="{{ url_for('delete_user', user_id=u[0]) }}" onsubmit="return confirm('Delete this user?');" style="display:inline;">
-                    <button type="submit">Delete</button>
+                <form method="POST" action="{{ url_for('delete_user', user_id=u[0]) }}" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+                    <button type="submit" class="action-btn action-btn-delete">Delete</button>
                 </form>
             </td>
         </tr>
@@ -58,4 +58,15 @@
     </tbody>
 </table>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            // Redirect to /users to clear edit mode
+            window.location.href = "{{ url_for('users') }}";
+        });
+    }
+});
+</script>
 {% endblock %}

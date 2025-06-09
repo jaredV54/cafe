@@ -1,12 +1,23 @@
-#login-form {
-    width: 90%;
+/* Login Page Specific Styling */
+/* Override the default page container for login */
+#page-container {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    height: 100vh;
     display: flex;
-    flex-direction: row;
     justify-content: center;
     align-items: center;
-    margin: auto;
-    gap: 10px;
-    height: 100dvh;
+}
+
+#login-form {
+    background: var(--light);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 #login-form > div {
@@ -14,35 +25,52 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: relative;
-    gap: 10px;
+    gap: 1rem;
+}
+
+.passkey-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
 }
 
 .passkey-input-container input {
-    width: 50%;
-    min-width: 300px;
-    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: var(--fs-s);
+    transition: all var(--trans-duration-default);
 }
 
 .passkey-input-container input[type='password'] {
     border: 2px solid var(--brown-ver1);
-    font-size: var(--fs-s);
-    border-radius: 6px;
     text-align: center;
     font-weight: 900;
     letter-spacing: 10px;
     outline: none;
 }
 
+.passkey-input-container input[type='password']:focus {
+    border-color: var(--brown-light);
+    box-shadow: 0 0 0 3px rgba(166, 123, 91, 0.1);
+}
+
 .passkey-input-container input[type='submit'] {
     background-color: var(--brown-ver1);
     color: white;
     border: none;
-    border-radius: 6px;
-    font-size: var(--fs-s);
     font-weight: 600;
     cursor: pointer;
-    transition: all ease .27s;
+    transition: all var(--trans-duration-default);
+}
+
+.passkey-input-container input[type='submit']:hover {
+    background-color: var(--brown-ver2);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-material);
 }
 
 .passkey-input-container input[type="password"]::-ms-reveal,
@@ -64,8 +92,10 @@
 }
 
 label {
-    font-size: var(--fs-m);
+    font-size: var(--fs-l);
     font-weight: 600;
+    color: var(--brown-ver1);
+    text-align: center;
 }
 
 .username-buttons {
@@ -73,29 +103,92 @@ label {
     justify-content: center;
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 0.75rem;
+    width: 100%;
 }
 
 .username-btn {
-    margin: 5px;
-    padding: 8px 12px;
+    padding: 0.75rem 1.5rem;
     background-color: var(--brown-light);
     border: none;
     cursor: pointer;
-    width: 100%;
-    border-radius: 6px;
+    border-radius: 8px;
     color: white;
     font-size: var(--fs-s);
-    border-radius: 6px;
-    text-align: center;
     font-weight: 600;
-    border: 3px solid var(--brown-light);
+    border: 2px solid var(--brown-light);
     outline: none;
-    transition: all ease .27s;
+    transition: all var(--trans-duration-default);
+    min-width: 120px;
+}
+
+.username-btn:hover {
+    background-color: var(--brown-ver2);
+    border-color: var(--brown-ver2);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-material);
 }
 
 .username-btn.selected {
     background-color: var(--brown-ver1);
     color: white;
-    border: 3px solid var(--brown-light);
+    border-color: var(--brown-ver1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-material);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #login-form {
+        padding: 1.5rem;
+        margin: 1rem;
+        gap: 1.5rem;
+    }
+    
+    .username-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .username-btn {
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    .passkey-input-container input {
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    #login-form {
+        padding: 1rem;
+        margin: 0.5rem;
+    }
+    
+    label {
+        font-size: var(--fs-m);
+    }
+    
+    .passkey-input-container input {
+        padding: 0.75rem;
+        font-size: var(--fs-xs);
+    }
+}
+
+/* Add a subtle animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#login-form {
+    animation: fadeIn 0.5s ease-out;
 }
 

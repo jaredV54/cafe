@@ -50,8 +50,8 @@ def init_db(db_path):
                 cash NUMERIC(10, 2) NOT NULL,
                 change NUMERIC(10, 2) NOT NULL,
                 total_amount NUMERIC(10, 2) NOT NULL,
-                is_deleted INTEGER DEFAULT 0,
                 mode_of_payment TEXT NOT NULL CHECK(mode_of_payment IN ('cash', 'gcash')),
+                is_deleted INTEGER DEFAULT 0,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
         ''')

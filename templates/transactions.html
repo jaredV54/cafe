@@ -5,18 +5,27 @@
 
 <h2>Transaction Records</h2>
 <form method="GET" id="filter-form">
-    <label>From:</label>
-    <input type="datetime-local" name="startdate" value="{{ request.args.get('startdate', '') }}">
-    <label>To:</label>
-    <input type="datetime-local" name="enddate" value="{{ request.args.get('enddate', '') }}">
-    <button type="submit" value="Filter">Filter</button>
-    <button type="button" id="clear-date-button">Clear Date Filters</button><br><br>
-    <label>Search:</label>
-    <input type="text" placeholder="Receipt ID or Staff" name="q" id="search-query" value="{{ request.args.get('q', '') }}">
-    <button type="button" id="clear-search-button">Clear Search</button>
+    <div>
+        <div>
+            <div>
+                <label>From:</label>
+                <input type="datetime-local" name="startdate" value="{{ request.args.get('startdate', '') }}">
+                <label>To:</label>
+                <input type="datetime-local" name="enddate" value="{{ request.args.get('enddate', '') }}">
+            </div>
+        </div>
+        <div>
+            <button type="submit" value="Filter">Filter</button>
+            <button type="button" id="clear-date-button">Clear</button>
+        </div>
+    </div>
+    <div>
+        <input type="text" placeholder="Receipt ID or Staff" name="q" id="search-query" value="{{ request.args.get('q', '') }}">
+        <button type="button" id="clear-search-button">Clear</button>
+    </div>
 </form>
     
-<table border="1" style="margin-top: 10px;">
+<table>
     <thead>
         <tr>
             <th>Receipt ID</th>
@@ -27,6 +36,9 @@
             <th>Change</th>
             <th>Mode of Payment</th>
             <th>Details</th>
+            {% if session.role == 'admin' %}
+            <th>Delete</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody id="transaction-table-body">
@@ -40,7 +52,14 @@
             <td>{{ t[5] }}</td> 
             <td>{{ t[6] }}</td> 
             <td>
-                <a href="{{ url_for('transactions') }}?receipt_id={{ t[0] }}">View Receipt</a>
+                <a class="action-btn" href="{{ url_for('transactions') }}?receipt_id={{ t[0] }}">View Receipt</a>
+            </td>
+            <td>
+                {% if session.role == 'admin' %}
+                    <form method="POST" action="{{ url_for('delete_transaction', transaction_id=t[0]) }}" style="display:inline;" onsubmit="return confirm('Delete this transaction?');">
+                        <button type="submit" class="action-btn action-btn-delete">Delete</button>
+                    </form>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

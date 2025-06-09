@@ -21,10 +21,30 @@ DB = os.getenv('DATABASE_URL', 'database.db')
 def setup():
     init_db(DB)
 
+# Global Funtions
+def getProducts():
+    category = request.args.get('category', 'all')
+    try:
+        with sqlite3.connect(DB) as conn:
+            conn.row_factory = sqlite3.Row  
+            cur = conn.cursor()
+            if category == 'all':
+                cur.execute("SELECT id, name, price, is_available, category FROM products WHERE is_deleted = 0")
+            else:
+                cur.execute("SELECT id, name, price, is_available, category FROM products WHERE category = ? AND is_deleted = 0", (category,))
+            products = cur.fetchall()
+    except sqlite3.Error as e:
+        flash(f"An error occurred while fetching products: {e}", "warning")
+        products = []
+
+    if request.path == '/inventory':
+        return render_template("inventory.html", products=products, selected_category=category)
+    else:
+        return render_template("purchase.html", products=products, selected_category=category)
+
 # ---------------------------------------------------------------------------------------------
 # LOGIN 
 # Read
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if "user" in session:
@@ -32,7 +52,7 @@ def login():
 
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
-        cur.execute("SELECT username FROM users")
+        cur.execute("SELECT username FROM users WHERE is_deleted != 1")
         usernames = [row[0] for row in cur.fetchall()]
 
     selected_username = ""
@@ -64,27 +84,6 @@ def login():
                 return render_template("login.html", usernames=usernames, selected_username=selected_username)
 
     return render_template("login.html", usernames=usernames, selected_username=selected_username)
-
-# Global Funtions
-def getProducts():
-    category = request.args.get('category', 'all')
-    try:
-        with sqlite3.connect(DB) as conn:
-            conn.row_factory = sqlite3.Row  
-            cur = conn.cursor()
-            if category == 'all':
-                cur.execute("SELECT id, name, price, is_available, category FROM products WHERE is_deleted = 0")
-            else:
-                cur.execute("SELECT id, name, price, is_available, category FROM products WHERE category = ? AND is_deleted = 0", (category,))
-            products = cur.fetchall()
-    except sqlite3.Error as e:
-        flash(f"An error occurred while fetching products: {e}", "warning")
-        products = []
-
-    if request.path == '/inventory':
-        return render_template("inventory.html", products=products, selected_category=category)
-    else:
-        return render_template("purchase.html", products=products, selected_category=category)
 
 # ---------------------------------------------------------------------------------------------
 # LOGOUT 
@@ -147,7 +146,7 @@ def purchase():
 # ---------------------------------------------------------------------------------------------
 # TRANSACTION RECORDS 
 # Read
-@app.route('/transactions')
+@app.route('/transactions', methods=['GET', 'POST'])
 @login_required
 def transactions():
     q = request.args.get('q')
@@ -177,11 +176,10 @@ def transactions():
                 WHERE transaction_id = ?
             """, (receipt_id,))
             products = cursor.fetchall()
-            # Format cash, change, and total_amount for the receipt
             transaction = list(transaction)
-            transaction[4] = f"{float(transaction[4]):.2f}"  # cash
-            transaction[5] = f"{float(transaction[5]):.2f}"  # change
-            transaction[6] = f"{float(transaction[6]):.2f}"  # total_amount
+            transaction[4] = f"{float(transaction[4]):.2f}"  
+            transaction[5] = f"{float(transaction[5]):.2f}"  
+            transaction[6] = f"{float(transaction[6]):.2f}" 
 
     if startdate and enddate:
         try:
@@ -201,6 +199,7 @@ def transactions():
             FROM transactions 
             INNER JOIN users ON transactions.user_id = users.id
             WHERE transaction_time BETWEEN ? AND ? AND transactions.is_deleted != 1
+            ORDER BY transactions.id DESC
         """, (start_datetime_str, end_datetime_str))
         transactions = cursor.fetchall()
 
@@ -213,6 +212,7 @@ def transactions():
                     FROM transactions 
                     INNER JOIN users ON transactions.user_id = users.id
                     WHERE transactions.id = ? AND transactions.is_deleted != 1
+                    ORDER BY transactions.id DESC
                 """, (transaction_id,))
                 transactions = cursor.fetchall()
                 if not transactions:
@@ -224,6 +224,7 @@ def transactions():
                     FROM transactions 
                     INNER JOIN users ON transactions.user_id = users.id
                     WHERE LOWER(users.username) LIKE ? AND transactions.is_deleted != 1
+                    ORDER BY transactions.id DESC
                 """, (f"%{q_lower}%",))
                 transactions = cursor.fetchall()
                 if not transactions:
@@ -238,6 +239,7 @@ def transactions():
             FROM transactions 
             INNER JOIN users ON transactions.user_id = users.id
             WHERE transactions.is_deleted != 1
+            ORDER BY transactions.id DESC
         """)
         transactions = cursor.fetchall()
 
@@ -259,6 +261,22 @@ def transactions():
         ))
 
     return render_template('transactions.html', transactions=formatted_transactions, transaction=transaction, products=products, q=q, startdate=startdate, enddate=enddate)
+
+@app.route('/transactions/delete/<int:transaction_id>', methods=['POST'])
+@login_required
+def delete_transaction(transaction_id):
+    if not is_admin():
+        flash("Unauthorized action.", "danger")
+        return redirect(url_for('transactions'))
+    try:
+        with sqlite3.connect(DB) as conn:
+            cur = conn.cursor()
+            cur.execute("UPDATE transactions SET is_deleted = 1 WHERE id=?", (transaction_id,))
+            conn.commit()
+        flash("Transaction deleted successfully.", "success")
+    except sqlite3.Error as e:
+        flash(f"An error occurred while deleting the transaction: {e}", "warning")
+    return redirect(url_for('transactions'))
 
 # ---------------------------------------------------------------------------------------------
 # INVENTORY MANAGEMENT 

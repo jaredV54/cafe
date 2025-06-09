@@ -1,0 +1,248 @@
+:root {
+    --dark: #28282b;
+    --light: #fff;
+    --brown-light: #a67b5b;
+    --brown-ver1: #4b3621;
+    --brown-ver2: #6f4e37;
+    --brown-ver3: #382206;
+}
+
+h2,
+.sales-title {
+    color: var(--brown-ver2);
+    text-align: center;
+    margin-top: 24px;
+    letter-spacing: 1px;
+}
+
+#sales-filter-form,
+.sales-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    max-width: 95%;
+    margin: 0 auto 30px auto;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background: var(--light);
+}
+
+#sales-filter-form > div,
+.sales-filter-form > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+}
+
+#sales-filter-form label,
+.sales-filter-form label {
+    font-weight: 500;
+    color: var(--brown-ver2);
+    margin-right: 5px;
+}
+
+#sales-filter-form input[type="date"],
+#sales-filter-form input[type="month"],
+#sales-filter-form input[type="number"],
+#sales-filter-form input[type="text"],
+.sales-filter-form input[type="date"],
+.sales-filter-form input[type="month"],
+.sales-filter-form input[type="number"],
+.sales-filter-form input[type="text"] {
+    padding: 6px 10px;
+    border: 1px solid var(--brown-light);
+    border-radius: 4px;
+    background: var(--light);
+    color: var(--brown-ver1);
+    font-size: var(--fs-xxs);
+    margin-right: 10px;
+    min-width: 120px;
+}
+
+#sales-filter-form select,
+.sales-filter-form select {
+    padding: 6px 10px;
+    border: 1px solid var(--brown-light);
+    border-radius: 4px;
+    background: var(--light);
+    color: var(--brown-ver1);
+    font-size: var(--fs-xxs);
+    margin-right: 10px;
+}
+
+#sales-filter-form button[type="submit"],
+#sales-filter-form button[type="button"],
+.sales-filter-btn,
+.sales-print-btn {
+    padding: 7px 14px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 8px;
+    border: none;
+}
+
+#sales-filter-form button[type="submit"],
+.sales-filter-btn {
+    background: var(--brown-light);
+    color: var(--light);
+    transition: background 0.2s;
+}
+#sales-filter-form button[type="submit"]:hover,
+.sales-filter-btn:hover {
+    background: var(--brown-ver2);
+}
+
+#sales-filter-form button[type="button"],
+.sales-print-btn {
+    background: #ede0d4;
+    color: var(--brown-ver2);
+    border: 1px solid var(--brown-ver2);
+    transition: background 0.2s;
+}
+#sales-filter-form button[type="button"]:hover,
+.sales-print-btn:hover {
+    background: #d7ccc8;
+    color: var(--brown-ver1);
+}
+
+/* Table */
+.sales-table,
+.sales-table-daily,
+.sales-table-monthly,
+.sales-table-yearly {
+    width: 65%;
+    margin: 0 auto 30px auto;
+    border-collapse: collapse;
+    background: var(--light);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(110, 80, 60, 0.05);
+    font-size: var(--fs-xxxs);
+    font-weight: 500;
+    min-width: 400px;
+}
+
+.sales-total-revenue {
+    width: 65%;
+    min-width: 400px;
+    margin: auto;
+}
+
+.sales-table thead,
+.sales-table-daily thead,
+.sales-table-monthly thead,
+.sales-table-yearly thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.sales-table th, .sales-table td,
+.sales-table-daily th, .sales-table-daily td,
+.sales-table-monthly th, .sales-table-monthly td,
+.sales-table-yearly th, .sales-table-yearly td {
+    padding: 10px 8px;
+    text-align: center;
+}
+
+.sales-table th,
+.sales-table-daily th,
+.sales-table-monthly th,
+.sales-table-yearly th {
+    font-weight: 600;
+    background-color: var(--brown-light);
+    color: var(--light);
+}
+
+.sales-table tbody tr:hover,
+.sales-table-daily tbody tr:hover,
+.sales-table-monthly tbody tr:hover,
+.sales-table-yearly tbody tr:hover {
+    background-color: #e2e2e2;
+}
+
+@media (max-width: 700px) {
+    #sales-filter-form,
+    .sales-filter-form {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 10px 5px;
+    }
+    #sales-filter-form > div,
+    .sales-filter-form > div {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    #sales-filter-form input[type="date"],
+    #sales-filter-form input[type="month"],
+    #sales-filter-form input[type="number"],
+    #sales-filter-form input[type="text"],
+    .sales-filter-form input[type="date"],
+    .sales-filter-form input[type="month"],
+    .sales-filter-form input[type="number"],
+    .sales-filter-form input[type="text"] {
+        margin-right: 0;
+        min-width: 0;
+        width: 100%;
+    }
+    #sales-filter-form select,
+    .sales-filter-form select {
+        margin-right: 0;
+        width: 100%;
+    }
+    #sales-filter-form button[type="submit"],
+    #sales-filter-form button[type="button"],
+    .sales-filter-btn,
+    .sales-print-btn {
+        margin-right: 0;
+        width: 100%;
+    }
+    .sales-table,
+    .sales-table-daily,
+    .sales-table-monthly,
+    .sales-table-yearly {
+        font-size: 0.95em;
+    }
+    .sales-table th, .sales-table td,
+    .sales-table-daily th, .sales-table-daily td,
+    .sales-table-monthly th, .sales-table-monthly td,
+    .sales-table-yearly th, .sales-table-yearly td {
+        padding: 7px 4px;
+    }
+}
+
+@media print {
+    body, .sales-table, .sales-table-daily, .sales-table-monthly, .sales-table-yearly {
+        background: var(--light) !important;
+        box-shadow: none !important;
+    }
+    #sales-filter-form,
+    .sales-filter-form {
+        display: none !important;
+    }
+    .sales-table,
+    .sales-table-daily,
+    .sales-table-monthly,
+    .sales-table-yearly {
+        page-break-inside: auto;
+        font-size: var(--fs-xxs);
+    }
+    .sales-table th, .sales-table td,
+    .sales-table-daily th, .sales-table-daily td,
+    .sales-table-monthly th, .sales-table-monthly td,
+    .sales-table-yearly th, .sales-table-yearly td {
+        border: 1px solid #333 !important;
+        color: #222 !important;
+        background: var(--light) !important;
+    }
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+}

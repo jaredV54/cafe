@@ -72,5 +72,36 @@ document.getElementById('search-query').addEventListener('input', function() {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    const categories = document.querySelectorAll('.categories li');
+    const products = document.querySelectorAll('#product-list .product-item');
+    const CATEGORY_KEY = 'selectedCategory';
+
+    function filterProducts(category) {
+        products.forEach(item => {
+            if (category === 'all' || item.dataset.category === category) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        categories.forEach(li => {
+            li.classList.toggle('active', li.dataset.category === category);
+        });
+    }
+
+    categories.forEach(li => {
+        li.addEventListener('click', function(e) {
+            e.preventDefault();
+            const category = li.dataset.category;
+            localStorage.setItem(CATEGORY_KEY, category);
+            filterProducts(category);
+        });
+    });
+
+    const savedCategory = localStorage.getItem(CATEGORY_KEY) || 'all';
+    filterProducts(savedCategory);
+});
+
 window.selectProduct = selectProduct;
 
