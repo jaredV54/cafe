@@ -563,9 +563,10 @@ def sales():
 # Delete
 
 @app.route("/users")
+@login_required
 def users():
-    """ if not is_admin():
-        return redirect(url_for("purchase")) """
+    if not is_admin():
+        return redirect(url_for("purchase"))
     
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
@@ -574,9 +575,10 @@ def users():
     return render_template("users.html", users=user_list)
 
 @app.route("/users/add", methods=["POST"])
+@login_required
 def add_user():
-    """ if not is_admin():
-        return redirect(url_for("purchase")) """
+    if not is_admin():
+        return redirect(url_for("purchase"))
     
     username = request.form["username"]
     passkey = request.form["passkey"]
@@ -602,9 +604,10 @@ def add_user():
     return redirect(url_for("users"))
 
 @app.route("/users/edit/<int:user_id>", methods=["GET", "POST"])
+@login_required
 def edit_user(user_id):
-    """ if not is_admin():
-        return redirect(url_for("purchase")) """
+    if not is_admin():
+        return redirect(url_for("purchase"))
     
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
@@ -649,9 +652,10 @@ def edit_user(user_id):
     return render_template("users.html", users=user_list, edit_user=user_dict)
 
 @app.route("/users/delete/<int:user_id>", methods=["POST"])
+@login_required
 def delete_user(user_id):
-    """ if not is_admin():
-        return redirect(url_for("purchase")) """
+    if not is_admin():
+        return redirect(url_for("purchase"))
     
     with sqlite3.connect(DB) as conn:
         cur = conn.cursor()
