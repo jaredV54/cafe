@@ -51,16 +51,19 @@
             <td>{{ t[4] }}</td> 
             <td>{{ t[5] }}</td> 
             <td>{{ t[6] }}</td> 
+            <td>{{ t[7] }}</td> 
+            <td>{{ t[8] }}</td> 
+            <td>{{ t[9] }}</td> 
             <td>
                 <a class="action-btn" href="{{ url_for('transactions') }}?receipt_id={{ t[0] }}">View Receipt</a>
             </td>
+            {% if session.role == 'admin' %}
             <td>
-                {% if session.role == 'admin' %}
                     <form method="POST" action="{{ url_for('delete_transaction', transaction_id=t[0]) }}" style="display:inline;" onsubmit="return confirm('Delete this transaction?');">
                         <button type="submit" class="action-btn action-btn-delete">Delete</button>
                     </form>
+                </td>
                 {% endif %}
-            </td>
         </tr>
         {% endfor %}
     </tbody>
