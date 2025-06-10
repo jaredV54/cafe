@@ -257,7 +257,10 @@ def transactions():
             f"{float(t[6]):.2f}",# total_amount
             f"{float(t[4]):.2f}",# cash
             f"{float(t[5]):.2f}",# change
-            t[8]                 # mode_of_payment
+            t[8],
+            t[7],
+            t[4],
+            t[3]
         ))
 
     return render_template('transactions.html', transactions=formatted_transactions, transaction=transaction, products=products, q=q, startdate=startdate, enddate=enddate)
