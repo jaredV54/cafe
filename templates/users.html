@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelBtn = document.getElementById('cancel-edit-btn');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', function() {
-            // Redirect to /users to clear edit mode
             window.location.href = "{{ url_for('users') }}";
         });
     }

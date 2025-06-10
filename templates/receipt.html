@@ -3,7 +3,7 @@
     <div id="receipt-area" class="receipt-area">
         <div class="receipt-header">Cafe Name</div>
         <div class="receipt-row receipt-number">Receipt #: {{ transaction[0] }}</div>
-        <div class="receipt-row receipt-mode">Mode: {{ transaction[8] }}</div>
+        <div class="receipt-row receipt-mode">Mode: {{ transaction[7] }}</div>
         <div class="receipt-row receipt-date">Date: {{ transaction[3] }}</div>
         <hr class="receipt-hr">
         <table class="receipt-table">
@@ -16,7 +16,7 @@
             <tr class="receipt-table-row">
                 <td class="receipt-item">{{ p[0] }}</td>
                 <td class="receipt-qty">{{ p[1] }}</td>
-                <td class="receipt-price">{{ p[2] }}</td>
+                <td class="receipt-price">{{ float(p[2]):.2f }}</td>
             </tr>
             {% endfor %}
         </table>
